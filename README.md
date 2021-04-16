@@ -1,3 +1,5 @@
+# LSRTM GPU Experiment
+
 This repo contains various projects that I tackled with in MSc thesis. Some are still private while I still wrap up the final paper. This repo contains the functions and headers needed by the individual projects. The projects are offered in git submodules, so you will need to use a command like this to update the submodules:
 
 ```
