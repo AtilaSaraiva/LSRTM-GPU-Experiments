@@ -1,0 +1,9 @@
+3.1-git	lap	LSRTM_GPU_proj/projects/laplafilter:	asqs@marreca	Wed Nov 25 19:17:20 2020
+
+	d2=25
+	n2=400
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/lapla.rsf@"
+	d1=8
+	n1=400

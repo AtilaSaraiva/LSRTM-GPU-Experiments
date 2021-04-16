@@ -1,0 +1,15 @@
+3.1-git	sfspike	LSRTM_GPU_proj/projects/laplafilter:	asqs@marreca	Wed Nov 25 19:17:20 2020
+
+	d2=25
+	o1=0
+	n2=400
+	o2=0
+	label1="Time"
+	data_format="native_float"
+	label2="Distance"
+	esize=4
+	in="/var/tmp/vel2.rsf@"
+	unit1="s"
+	unit2="km"
+	d1=8
+	n1=400

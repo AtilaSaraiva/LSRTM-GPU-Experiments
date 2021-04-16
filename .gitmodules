@@ -1,0 +1,12 @@
+[submodule "projects/RTM"]
+	path = projects/RTM
+	url = https://github.com/AtilaSaraiva/GPU-RTM
+[submodule "projects/FiltoCurv"]
+	path = projects/FiltoCurv
+	url = https://github.com/AtilaSaraiva/Curvelet-LSRTM-filtering
+[submodule "projects/Born"]
+	path = projects/Born
+	url = https://github.com/AtilaSaraiva/GPU-Born-Modeling
+[submodule "projects/FD-Seismic-data"]
+	path = projects/FD-Seismic-data
+	url = https://github.com/AtilaSaraiva/Seismic-data-GPU
