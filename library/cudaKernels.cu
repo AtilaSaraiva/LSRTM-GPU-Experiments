@@ -181,7 +181,7 @@ __global__ void kernel_applySourceArray(float dt, float *d_reflectivity, float *
     if (gy >= c_nb && gy < c_ny - c_nb && gx >= c_nb && gx < c_nx - c_nb)
     {
         v_dt2 = d_vel[idx] * d_vel[idx] * dt * dt;
-        updValue = v_dt2 * d_pField[idx] * d_reflectivity[gxWoutBord * nyWoutBord + gyWoutBord];
+        updValue = -1 * v_dt2 * d_pField[idx] * d_reflectivity[gxWoutBord * nyWoutBord + gyWoutBord];
         d_q[idx] += updValue;
     }
 }
