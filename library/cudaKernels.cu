@@ -94,7 +94,7 @@ __global__ void receptors(int it, int nr, int gxbeg, float *d_u1, float *d_data)
     unsigned int gx = blockIdx.x * blockDim.x + threadIdx.x;
 
     if(gx < nr){
-        d_data[gx * c_nt + it] = d_u1[(gx + gxbeg + c_nb) * c_ny + c_nb];
+        d_data[gx * c_nt + it] = d_u1[(gx + gxbeg + c_nb) * c_ny + c_nb + 1];
     }
 }
 
@@ -180,11 +180,35 @@ __global__ void kernel_applySourceArray(float dt, float *d_reflectivity, float *
 
     if (gy >= c_nb && gy < c_ny - c_nb && gx >= c_nb && gx < c_nx - c_nb)
     {
-        v_dt2 = d_vel[idx] * d_vel[idx] * dt * dt;
-        updValue = -1 * v_dt2 * d_pField[idx] * d_reflectivity[gxWoutBord * nyWoutBord + gyWoutBord];
+        //v_dt2 = d_vel[idx] * d_vel[idx] * dt * dt;
+        //updValue = -1 * v_dt2 * d_pField[idx] * d_reflectivity[gxWoutBord * nyWoutBord + gyWoutBord];
+        updValue = -1 * d_pField[idx] * d_reflectivity[gxWoutBord * nyWoutBord + gyWoutBord];
         d_q[idx] += updValue;
     }
 }
+
+__global__ void kernel_applySourceArray_ver2(float dt, float *d_reflectivity, float *d_lap, float *d_vel, float *d_q)
+{
+    unsigned int gx = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int gy = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int idx = gx * c_ny + gy;
+
+    unsigned int gxWoutBord = gx - c_nb;
+    unsigned int gyWoutBord = gy - c_nb;
+    unsigned int nyWoutBord = c_ny - 2 * c_nb;
+
+    //float v_dt2;
+    float updValue;
+
+    if (gy >= c_nb && gy < c_ny - c_nb && gx >= c_nb && gx < c_nx - c_nb)
+    {
+        //v_dt2 = d_vel[idx] * d_vel[idx] * dt * dt;
+        //updValue = -1 * v_dt2 * d_pField[idx] * d_reflectivity[gxWoutBord * nyWoutBord + gyWoutBord];
+        updValue = d_lap[idx] * d_reflectivity[gxWoutBord * nyWoutBord + gyWoutBord];
+        d_q[idx] += updValue;
+    }
+}
+
 
 __device__ void set_halo(float *global, float shared[][SDIMX], int tx, int ty, int sx, int sy, int gx, int gy, int nx, int ny)
 {
@@ -325,14 +349,14 @@ __global__ void kernel_2dfd(float *d_u1, float *d_u2, float *d_vp)
     }
 }
 
-// Lapla filter kernel
-__global__ void kernel_lap_filter(float *d_rtm)
+__global__ void kernel_2dfd_ver2(float *d_lap, float *d_u1, float *d_u2, float *d_vp)
 {
     // save model dims in registers as they are much faster
     const int nx = c_nx;
     const int ny = c_ny;
 
     // FD coefficient dt2 / dx2
+    const float dt2 = c_dt2;
     const float one_dx2 = c_one_dx2;
     const float one_dy2 = c_one_dy2;
 
@@ -352,28 +376,34 @@ __global__ void kernel_lap_filter(float *d_rtm)
     const unsigned int idx = gx * ny + gy;
 
     // Allocate shared memory for a block (smem)
-    __shared__ float s_rtm[SDIMY][SDIMX];
+    __shared__ float s_u1[SDIMY][SDIMX];
+    __shared__ float s_u2[SDIMY][SDIMX];
+    __shared__ float s_vp[SDIMY][SDIMX];
 
     // If thread points into the physical domain
     if ((gx < nx) && (gy < ny))
     {
         // Copy regions from gmem into smem
         //       gmem, smem,  block, shared, global, dims
-        set_halo(d_rtm, s_rtm, tx, ty, sx, sy, gx, gy, nx, ny);
+        set_halo(d_u1, s_u1, tx, ty, sx, sy, gx, gy, nx, ny);
+        set_halo(d_u2, s_u2, tx, ty, sx, sy, gx, gy, nx, ny);
+        set_halo(d_vp, s_vp, tx, ty, sx, sy, gx, gy, nx, ny);
         __syncthreads();
 
         // Central point of fd stencil, o o o o x o o o o
-        float drtm_xx = c_coef[0] * s_rtm[sy][sx];
-        float drtm_yy = c_coef[0] * s_rtm[sy][sx];
+        float du2_xx = c_coef[0] * s_u2[sy][sx];
+        float du2_yy = c_coef[0] * s_u2[sy][sx];
 
 #pragma unroll
         for (int d = 1; d <= 4; d++)
         {
-            drtm_xx += c_coef[d] * (s_rtm[sy][sx - d] + s_rtm[sy][sx + d]);
-            drtm_yy += c_coef[d] * (s_rtm[sy - d][sx] + s_rtm[sy + d][sx]);
+            du2_xx += c_coef[d] * (s_u2[sy][sx - d] + s_u2[sy][sx + d]);
+            du2_yy += c_coef[d] * (s_u2[sy - d][sx] + s_u2[sy + d][sx]);
         }
         // Second order wave equation
-        d_rtm[idx] = drtm_xx * one_dx2 + drtm_yy * one_dy2;
+        d_lap[idx] = du2_xx * one_dx2 + du2_yy * one_dy2;
+        d_u1[idx] = 2.0 * s_u2[sy][sx] - s_u1[sy][sx] + s_vp[sy][sx] * s_vp[sy][sx] * (du2_xx * one_dx2 + du2_yy * one_dy2) * dt2;
+        //d_u1[idx] = du2_xx;
 
         __syncthreads();
     }

@@ -35,7 +35,8 @@ void expand(int nb, int nyb, int nxb, int nz, int nx, float *a, float *b)
 void abc_coef (int nb, float *abc)
 {
     for(int i=0; i<nb; i++){
-        abc[i] = exp (-pow(0.002 * (nb - i + 1),2.0));
+        abc[i] = exp (-pow(0.0002 * (nb - i + 1),2.0));
+        //abc[i] = exp (-pow(0.0002 * (nb - i + 1),2.0));
     }
 }
 
@@ -198,8 +199,8 @@ float* tapermask(geometry param)
 seismicData allocHostSeisData(geometry param, int nt)
 {
     seismicData h_seisData;
-    h_seisData.seismogram = new float[param.nReceptors * nt];
-    h_seisData.directWaveOnly = new float[param.nReceptors * nt];
+    h_seisData.seismogram = new float[param.nReceptors * nt * param.nShots];
+    h_seisData.directWaveOnly = new float[param.nReceptors * nt * param.nShots];
     return h_seisData;
 }
 
@@ -218,7 +219,7 @@ float* fillSrc(geometry param, velocity h_model, seismicData h_seisData)
 {
     float* wavelet;
 
-    float f0 = 10.0;                    // source dominawavelet.timeSamplesNt frequency, Hz <]
+    float f0 = 9.0;                    // source dominawavelet.timeSamplesNt frequency, Hz <]
     float t0 = 1.2 / f0;                // source padding to move wavelet from left of zero <]
 
     float tbytes = h_seisData.timeSamplesNt * sizeof(float);
@@ -245,10 +246,11 @@ float* fillSrc(geometry param, velocity h_model, seismicData h_seisData)
 source fillSrc(geometry param, velocity h_model)
 {
     source wavelet;
-    wavelet.totalTime = 3;               /* total time of wave propagation, sec */
+    wavelet.totalTime = 9.0;               /* total time of wave propagation, sec */
     float one_dx2 = float(1) / (param.modelDx * param.modelDx);
     float one_dy2 = float(1) / (param.modelDy * param.modelDy);
-    wavelet.timeStep = 0.5 / (h_model.maxVel * sqrt(one_dx2 + one_dy2)) ;         /* time step assuming constant vp, sec */
+    wavelet.timeStep = 0.5 / (h_model.maxVel * sqrt(one_dx2 + one_dy2)) ;      //   [> time step assuming constant vp, sec <]
+    //wavelet.timeStep = 0.0004;
     wavelet.timeSamplesNt = round(wavelet.totalTime / wavelet.timeStep);    // number of time steps
     wavelet.snapStep = round(0.1 * wavelet.timeSamplesNt);   /* save snapshot every ... steps */
 

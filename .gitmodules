@@ -10,3 +10,6 @@
 [submodule "projects/FD-Seismic-data"]
 	path = projects/FD-Seismic-data
 	url = https://github.com/AtilaSaraiva/Seismic-data-GPU
+[submodule "projects/Curvelet-Neural-filter"]
+	path = projects/Curvelet-Neural-filter
+	url = git@private.github.com:AtilaSaraiva/Curvelet-Neural-filter.git
