@@ -13,3 +13,6 @@
 [submodule "projects/Curvelet-Neural-filter"]
 	path = projects/Curvelet-Neural-filter
 	url = git@private.github.com:AtilaSaraiva/Curvelet-Neural-filter.git
+[submodule "projects/Unet-LSRTM-filter"]
+	path = projects/Unet-LSRTM-filter
+	url = git@private.github.com:AtilaSaraiva/Unet-LSRTM-filter.git
